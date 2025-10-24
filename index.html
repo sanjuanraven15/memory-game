@@ -380,7 +380,7 @@
 
     <header>
         <div class="header-content">
-            <img src="images/FUJI-HAYA LOGO [2.5k pix].png" alt="FUJI-HAYA LOGO">
+            <img src="assets/FUJI-HAYA LOGO [2.5k pix].png" alt="FUJI-HAYA LOGO">
         </div>
     </header>
 
@@ -453,6 +453,10 @@
 
     <script>
         'use strict';
+
+        // Audio Setup
+        const clapAudio = new Audio('clap.mp3');
+        clapAudio.preload = 'auto';
 
         // Confetti Setup
         const canvas = document.getElementById('confetti-canvas');
@@ -554,6 +558,7 @@
         var timer = 60;
         var timerInterval;
         var gameActive = false;
+        var timerStarted = false;
         var gameCompleted = false;
 
         var scoreDisplay = document.getElementById('score');
@@ -563,6 +568,8 @@
         timerDisplay.textContent = 'Time: ' + timer;
 
         function startTimer() {
+            if (timerStarted) return;
+            timerStarted = true;
             gameActive = true;
             timerInterval = setInterval(function () {
                 timer--;
@@ -598,10 +605,6 @@
             $('#exampleModalCenter').modal('show');
         });
 
-        document.getElementById('startButton').addEventListener('click', function () {
-            startTimer();
-        });
-
         var game = document.getElementById('game');
         var grid = document.createElement('section');
         grid.setAttribute('class', 'grid');
@@ -632,6 +635,7 @@
             });
             score++;
             scoreDisplay.textContent = 'Score: ' + score;
+            
             triggerConfetti();
 
             // Check if all pairs are matched (12 pairs total)
@@ -657,6 +661,11 @@
         };
 
         grid.addEventListener('click', function (event) {
+            // Start timer on first card click
+            if (!timerStarted) {
+                startTimer();
+            }
+
             if (!gameActive) return;
 
             var clicked = event.target;
