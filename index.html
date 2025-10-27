@@ -234,6 +234,66 @@
             margin: 1.75rem auto;
         }
 
+        /* Music Controls */
+        #music-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 15px;
+            border-radius: 50px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(101, 137, 249, 0.7);
+        }
+
+        #music-toggle {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        #music-toggle:hover {
+            transform: scale(1.1);
+        }
+
+        #music-toggle.muted {
+            opacity: 0.5;
+        }
+
+        #volume-slider {
+            width: 100px;
+            height: 5px;
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 5px;
+            outline: none;
+        }
+
+        #volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #6589F9;
+            cursor: pointer;
+        }
+
+        #volume-slider::-moz-range-thumb {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: #6589F9;
+            cursor: pointer;
+            border: none;
+        }
+
         /* Tablet devices (iPad, landscape phones) */
         @media (max-width: 1024px) {
             .grid {
@@ -288,6 +348,16 @@
 
             .game-over-content p {
                 font-size: 1.2rem;
+            }
+
+            #music-controls {
+                top: 10px;
+                right: 10px;
+                padding: 8px 12px;
+            }
+
+            #volume-slider {
+                width: 80px;
             }
         }
 
@@ -371,12 +441,32 @@
             .modal-body {
                 font-size: 16px !important;
             }
+
+            #music-controls {
+                top: 5px;
+                right: 5px;
+                padding: 6px 10px;
+            }
+
+            #music-toggle {
+                font-size: 20px;
+            }
+
+            #volume-slider {
+                width: 60px;
+            }
         }
     </style>
 </head>
 
 <body>
     <canvas id="confetti-canvas"></canvas>
+
+    <!-- Music Controls -->
+    <div id="music-controls" style="display: none;">
+        <button id="music-toggle">🔊</button>
+        <input type="range" id="volume-slider" min="0" max="100" value="50">
+    </div>
 
     <header>
         <div class="header-content">
@@ -461,6 +551,13 @@
         // Flip Audio Setup
         const flipAudio = new Audio('flip.mp3');
         flipAudio.preload = 'auto';
+        flipAudio.volume = 0.5;
+        
+        // Background Music Setup
+        const bgMusic = new Audio('bg.mp3');
+        bgMusic.preload = 'auto';
+        bgMusic.loop = true;
+        bgMusic.volume = 0.3; // Set to 50% volume
 
         // Confetti Setup
         const canvas = document.getElementById('confetti-canvas');
@@ -607,6 +704,38 @@
 
         $(document).ready(function () {
             $('#exampleModalCenter').modal('show');
+        });
+
+        // Music Controls
+        const musicControls = document.getElementById('music-controls');
+        const musicToggle = document.getElementById('music-toggle');
+        const volumeSlider = document.getElementById('volume-slider');
+        const startButton = document.getElementById('startButton');
+
+        // Start background music when "Got it!" button is clicked
+        startButton.addEventListener('click', function() {
+            bgMusic.play().catch(function(error) {
+                console.log("Background music play failed:", error);
+            });
+            musicControls.style.display = 'flex';
+        });
+
+        // Toggle mute/unmute
+        musicToggle.addEventListener('click', function() {
+            if (bgMusic.muted) {
+                bgMusic.muted = false;
+                musicToggle.textContent = '🔊';
+                musicToggle.classList.remove('muted');
+            } else {
+                bgMusic.muted = true;
+                musicToggle.textContent = '🔇';
+                musicToggle.classList.add('muted');
+            }
+        });
+
+        // Adjust volume with slider
+        volumeSlider.addEventListener('input', function() {
+            bgMusic.volume = this.value / 100;
         });
 
         var game = document.getElementById('game');
