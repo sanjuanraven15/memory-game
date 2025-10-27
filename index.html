@@ -457,6 +457,10 @@
         // Audio Setup
         const clapAudio = new Audio('clap.mp3');
         clapAudio.preload = 'auto';
+        
+        // Flip Audio Setup
+        const flipAudio = new Audio('flip.mp3');
+        flipAudio.preload = 'auto';
 
         // Confetti Setup
         const canvas = document.getElementById('confetti-canvas');
@@ -660,6 +664,14 @@
             });
         };
 
+        // Function to play flip sound
+        function playFlipSound() {
+            flipAudio.currentTime = 0; // Reset audio to start
+            flipAudio.play().catch(function(error) {
+                console.log("Flip audio play failed:", error);
+            });
+        }
+
         grid.addEventListener('click', function (event) {
             // Start timer on first card click
             if (!timerStarted) {
@@ -681,6 +693,10 @@
 
             if (count < 2) {
                 count++;
+                
+                // Play flip sound when a card is selected
+                playFlipSound();
+                
                 if (count === 1) {
                     firstGuess = card.dataset.name;
                     card.classList.add('selected');
