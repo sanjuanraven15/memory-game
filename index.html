@@ -542,309 +542,316 @@
         crossorigin="anonymous"></script>
 
     <script>
-        'use strict';
+    'use strict';
 
-        // Audio Setup
-        const clapAudio = new Audio('clap.mp3');
-        clapAudio.preload = 'auto';
-        
-        // Flip Audio Setup
-        const flipAudio = new Audio('flip.mp3');
-        flipAudio.preload = 'auto';
-        flipAudio.volume = 0.5;
-        
-        // Background Music Setup
-        const bgMusic = new Audio('bg.mp3');
-        bgMusic.preload = 'auto';
-        bgMusic.loop = true;
-        bgMusic.volume = 0.3; // Set to 50% volume
+    // Audio Setup
+    const clapAudio = new Audio('clap.mp3');
+    clapAudio.preload = 'auto';
+    
+    // Flip Audio Setup
+    const flipAudio = new Audio('flip.mp3');
+    flipAudio.preload = 'auto';
+    flipAudio.volume = 0.5;
+    
+    // Background Music Setup
+    const bgMusic = new Audio('bg.mp3');
+    bgMusic.preload = 'auto';
+    bgMusic.loop = true;
+    bgMusic.volume = 0.3; // Set to 50% volume
 
-        // Confetti Setup
-        const canvas = document.getElementById('confetti-canvas');
-        const ctx = canvas.getContext('2d');
+    // Confetti Setup
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let confettiPieces = [];
+
+    function Confetti() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height - canvas.height;
+        this.size = Math.random() * 8 + 5;
+        this.speedY = Math.random() * 3 + 2;
+        this.speedX = Math.random() * 2 - 1;
+        this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
+        this.rotation = Math.random() * 360;
+        this.rotationSpeed = Math.random() * 10 - 5;
+    }
+
+    Confetti.prototype.update = function () {
+        this.y += this.speedY;
+        this.x += this.speedX;
+        this.rotation += this.rotationSpeed;
+        if (this.y > canvas.height) {
+            this.y = -10;
+            this.x = Math.random() * canvas.width;
+        }
+    };
+
+    Confetti.prototype.draw = function () {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation * Math.PI / 180);
+        ctx.fillStyle = this.color;
+        ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
+        ctx.restore();
+    };
+
+    function createConfetti() {
+        for (let i = 0; i < 100; i++) {
+            confettiPieces.push(new Confetti());
+        }
+    }
+
+    function animateConfetti() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        confettiPieces.forEach((piece, index) => {
+            piece.update();
+            piece.draw();
+            if (confettiPieces.length > 100 && piece.y > canvas.height) {
+                confettiPieces.splice(index, 1);
+            }
+        });
+        if (confettiPieces.length > 0) {
+            requestAnimationFrame(animateConfetti);
+        }
+    }
+
+    function triggerConfetti() {
+        createConfetti();
+        animateConfetti();
+        setTimeout(() => {
+            confettiPieces = [];
+        }, 3000);
+    }
+
+    window.addEventListener('resize', () => {
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
+    });
 
-        let confettiPieces = [];
+    // Game Logic
+    const cardsArray = [
+        { 'name': '1', 'img': 'images/1.png' },
+        { 'name': '2', 'img': 'images/2.png' },
+        { 'name': '3', 'img': 'images/3.png' },
+        { 'name': '4', 'img': 'images/4.png' },
+        { 'name': '5', 'img': 'images/5.png' },
+        { 'name': '6', 'img': 'images/6.png' },
+        { 'name': '7', 'img': 'images/7.png' },
+        { 'name': '8', 'img': 'images/8.png' },
+        { 'name': '9', 'img': 'images/9.png' },
+        { 'name': '10', 'img': 'images/10.png' },
+        { 'name': '11', 'img': 'images/11.png' },
+        { 'name': '12', 'img': 'images/12.png' },
+    ];
 
-        function Confetti() {
-            this.x = Math.random() * canvas.width;
-            this.y = Math.random() * canvas.height - canvas.height;
-            this.size = Math.random() * 8 + 5;
-            this.speedY = Math.random() * 3 + 2;
-            this.speedX = Math.random() * 2 - 1;
-            this.color = `hsl(${Math.random() * 360}, 100%, 50%)`;
-            this.rotation = Math.random() * 360;
-            this.rotationSpeed = Math.random() * 10 - 5;
-        }
+    var gameGrid = cardsArray.concat(cardsArray).sort(function () {
+        return 0.5 - Math.random();
+    });
 
-        Confetti.prototype.update = function () {
-            this.y += this.speedY;
-            this.x += this.speedX;
-            this.rotation += this.rotationSpeed;
-            if (this.y > canvas.height) {
-                this.y = -10;
-                this.x = Math.random() * canvas.width;
-            }
-        };
+    var firstGuess = '';
+    var secondGuess = '';
+    var count = 0;
+    var previousTarget = null;
+    var delay = 1200;
+    var score = 0;
+    var timer = 60;
+    var timerInterval;
+    var gameActive = false;
+    var timerStarted = false;
+    var gameCompleted = false;
 
-        Confetti.prototype.draw = function () {
-            ctx.save();
-            ctx.translate(this.x, this.y);
-            ctx.rotate(this.rotation * Math.PI / 180);
-            ctx.fillStyle = this.color;
-            ctx.fillRect(-this.size / 2, -this.size / 2, this.size, this.size);
-            ctx.restore();
-        };
+    var scoreDisplay = document.getElementById('score');
+    scoreDisplay.textContent = 'Score: ' + score;
 
-        function createConfetti() {
-            for (let i = 0; i < 100; i++) {
-                confettiPieces.push(new Confetti());
-            }
-        }
+    var timerDisplay = document.getElementById('timer');
+    timerDisplay.textContent = 'Time: ' + timer;
 
-        function animateConfetti() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            confettiPieces.forEach((piece, index) => {
-                piece.update();
-                piece.draw();
-                if (confettiPieces.length > 100 && piece.y > canvas.height) {
-                    confettiPieces.splice(index, 1);
-                }
-            });
-            if (confettiPieces.length > 0) {
-                requestAnimationFrame(animateConfetti);
-            }
-        }
-
-        function triggerConfetti() {
-            createConfetti();
-            animateConfetti();
-            setTimeout(() => {
-                confettiPieces = [];
-            }, 3000);
-        }
-
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
-
-        // Game Logic
-        const cardsArray = [
-            { 'name': '1', 'img': 'images/1.png' },
-            { 'name': '2', 'img': 'images/2.png' },
-            { 'name': '3', 'img': 'images/3.png' },
-            { 'name': '4', 'img': 'images/4.png' },
-            { 'name': '5', 'img': 'images/5.png' },
-            { 'name': '6', 'img': 'images/6.png' },
-            { 'name': '7', 'img': 'images/7.png' },
-            { 'name': '8', 'img': 'images/8.png' },
-            { 'name': '9', 'img': 'images/9.png' },
-            { 'name': '10', 'img': 'images/10.png' },
-            { 'name': '11', 'img': 'images/11.png' },
-            { 'name': '12', 'img': 'images/12.png' },
-        ];
-
-        var gameGrid = cardsArray.concat(cardsArray).sort(function () {
-            return 0.5 - Math.random();
-        });
-
-        var firstGuess = '';
-        var secondGuess = '';
-        var count = 0;
-        var previousTarget = null;
-        var delay = 1200;
-        var score = 0;
-        var timer = 60;
-        var timerInterval;
-        var gameActive = false;
-        var timerStarted = false;
-        var gameCompleted = false;
-
-        var scoreDisplay = document.getElementById('score');
-        scoreDisplay.textContent = 'Score: ' + score;
-
-        var timerDisplay = document.getElementById('timer');
-        timerDisplay.textContent = 'Time: ' + timer;
-
-        function startTimer() {
-            if (timerStarted) return;
-            timerStarted = true;
-            gameActive = true;
-            timerInterval = setInterval(function () {
-                timer--;
-                timerDisplay.textContent = 'Time: ' + timer;
-                if (timer <= 0) {
-                    clearInterval(timerInterval);
-                    gameActive = false;
-                    endGame(false);
-                }
-            }, 1000);
-        }
-
-        function endGame(completed) {
-            gameCompleted = completed;
-
-            const gameOverTitle = document.getElementById('gameOverTitle');
-            const finalScore = document.getElementById('finalScore');
-
-            if (completed) {
-                gameOverTitle.innerHTML = '🎉 Congratulations!';
-                gameOverTitle.textContent = '🎉 Congratulations!';
-                finalScore.textContent = 'You completed the game with ' + score + ' matches within the time!';
-            } else {
-                gameOverTitle.innerHTML = '⏰ Time\'s Up!';
-                gameOverTitle.textContent = '⏰ Time\'s Up!';
-                finalScore.textContent = 'Your Score: ' + score;
-            }
-
-            document.getElementById('gameOverOverlay').style.display = 'flex';
-        }
-
-        $(document).ready(function () {
-            $('#exampleModalCenter').modal('show');
-        });
-
-        // Music Controls
-        const musicControls = document.getElementById('music-controls');
-        const musicToggle = document.getElementById('music-toggle');
-        const volumeSlider = document.getElementById('volume-slider');
-        const startButton = document.getElementById('startButton');
-
-        // Start background music when "Got it!" button is clicked
-        startButton.addEventListener('click', function() {
-            bgMusic.play().catch(function(error) {
-                console.log("Background music play failed:", error);
-            });
-            musicControls.style.display = 'flex';
-        });
-
-        // Toggle mute/unmute
-        musicToggle.addEventListener('click', function() {
-            if (bgMusic.muted) {
-                bgMusic.muted = false;
-                musicToggle.textContent = '🔊';
-                musicToggle.classList.remove('muted');
-            } else {
-                bgMusic.muted = true;
-                musicToggle.textContent = '🔇';
-                musicToggle.classList.add('muted');
-            }
-        });
-
-        // Adjust volume with slider
-        volumeSlider.addEventListener('input', function() {
-            bgMusic.volume = this.value / 100;
-        });
-
-        var game = document.getElementById('game');
-        var grid = document.createElement('section');
-        grid.setAttribute('class', 'grid');
-        game.appendChild(grid);
-
-        gameGrid.forEach(function (item) {
-            var name = item.name, img = item.img;
-            var card = document.createElement('div');
-            card.classList.add('card');
-            card.dataset.name = name;
-
-            var front = document.createElement('div');
-            front.classList.add('front');
-
-            var back = document.createElement('div');
-            back.classList.add('back');
-            back.style.backgroundImage = 'url(' + img + ')';
-
-            grid.appendChild(card);
-            card.appendChild(front);
-            card.appendChild(back);
-        });
-
-        var match = function match() {
-            var selected = document.querySelectorAll('.selected');
-            selected.forEach(function (card) {
-                card.classList.add('match');
-            });
-            score++;
-            scoreDisplay.textContent = 'Score: ' + score;
-            
-            triggerConfetti();
-
-            // Check if all pairs are matched (12 pairs total)
-            if (score === 12) {
+    function startTimer() {
+        if (timerStarted) return;
+        timerStarted = true;
+        gameActive = true;
+        timerInterval = setInterval(function () {
+            timer--;
+            timerDisplay.textContent = 'Time: ' + timer;
+            if (timer <= 0) {
                 clearInterval(timerInterval);
                 gameActive = false;
-                setTimeout(function () {
-                    endGame(true);
-                }, 1000);
+                endGame(false);
             }
-        };
+        }, 1000);
+    }
 
-        var resetGuesses = function resetGuesses() {
-            firstGuess = '';
-            secondGuess = '';
-            count = 0;
-            previousTarget = null;
+    function endGame(completed) {
+        gameCompleted = completed;
 
-            var selected = document.querySelectorAll('.selected');
-            selected.forEach(function (card) {
-                card.classList.remove('selected');
-            });
-        };
+        const gameOverTitle = document.getElementById('gameOverTitle');
+        const finalScore = document.getElementById('finalScore');
 
-        // Function to play flip sound
-        function playFlipSound() {
-            flipAudio.currentTime = 0; // Reset audio to start
-            flipAudio.play().catch(function(error) {
-                console.log("Flip audio play failed:", error);
-            });
+        if (completed) {
+            gameOverTitle.innerHTML = '🎉 Congratulations!';
+            gameOverTitle.textContent = '🎉 Congratulations!';
+            finalScore.textContent = 'You completed the game with ' + score + ' matches within the time!';
+        } else {
+            gameOverTitle.innerHTML = '⏰ Time\'s Up!';
+            gameOverTitle.textContent = '⏰ Time\'s Up!';
+            finalScore.textContent = 'Your Score: ' + score;
         }
 
-        grid.addEventListener('click', function (event) {
-            // Start timer on first card click
-            if (!timerStarted) {
-                startTimer();
-            }
+        // Play clap audio when game ends
+        clapAudio.currentTime = 2; // Reset audio to start
+        clapAudio.volume = 1;
+        clapAudio.play().catch(function(error) {
+            console.log("Clap audio play failed:", error);
+        });
 
-            if (!gameActive) return;
+        document.getElementById('gameOverOverlay').style.display = 'flex';
+    }
 
-            var clicked = event.target;
+    $(document).ready(function () {
+        $('#exampleModalCenter').modal('show');
+    });
 
-            var card = clicked.classList.contains('card') ? clicked : clicked.parentNode;
+    // Music Controls
+    const musicControls = document.getElementById('music-controls');
+    const musicToggle = document.getElementById('music-toggle');
+    const volumeSlider = document.getElementById('volume-slider');
+    const startButton = document.getElementById('startButton');
 
-            if (!card.classList.contains('card') ||
-                card === previousTarget ||
-                card.classList.contains('selected') ||
-                card.classList.contains('match')) {
-                return;
-            }
+    // Start background music when "Got it!" button is clicked
+    startButton.addEventListener('click', function() {
+        bgMusic.play().catch(function(error) {
+            console.log("Background music play failed:", error);
+        });
+        musicControls.style.display = 'flex';
+    });
 
-            if (count < 2) {
-                count++;
-                
-                // Play flip sound when a card is selected
-                playFlipSound();
-                
-                if (count === 1) {
-                    firstGuess = card.dataset.name;
-                    card.classList.add('selected');
-                    previousTarget = card;
+    // Toggle mute/unmute
+    musicToggle.addEventListener('click', function() {
+        if (bgMusic.muted) {
+            bgMusic.muted = false;
+            musicToggle.textContent = '🔊';
+            musicToggle.classList.remove('muted');
+        } else {
+            bgMusic.muted = true;
+            musicToggle.textContent = '🔇';
+            musicToggle.classList.add('muted');
+        }
+    });
+
+    // Adjust volume with slider
+    volumeSlider.addEventListener('input', function() {
+        bgMusic.volume = this.value / 100;
+    });
+
+    var game = document.getElementById('game');
+    var grid = document.createElement('section');
+    grid.setAttribute('class', 'grid');
+    game.appendChild(grid);
+
+    gameGrid.forEach(function (item) {
+        var name = item.name, img = item.img;
+        var card = document.createElement('div');
+        card.classList.add('card');
+        card.dataset.name = name;
+
+        var front = document.createElement('div');
+        front.classList.add('front');
+
+        var back = document.createElement('div');
+        back.classList.add('back');
+        back.style.backgroundImage = 'url(' + img + ')';
+
+        grid.appendChild(card);
+        card.appendChild(front);
+        card.appendChild(back);
+    });
+
+    var match = function match() {
+        var selected = document.querySelectorAll('.selected');
+        selected.forEach(function (card) {
+            card.classList.add('match');
+        });
+        score++;
+        scoreDisplay.textContent = 'Score: ' + score;
+        
+        triggerConfetti();
+
+        // Check if all pairs are matched (12 pairs total)
+        if (score === 12) {
+            clearInterval(timerInterval);
+            gameActive = false;
+            setTimeout(function () {
+                endGame(true);
+            }, 1000);
+        }
+    };
+
+    var resetGuesses = function resetGuesses() {
+        firstGuess = '';
+        secondGuess = '';
+        count = 0;
+        previousTarget = null;
+
+        var selected = document.querySelectorAll('.selected');
+        selected.forEach(function (card) {
+            card.classList.remove('selected');
+        });
+    };
+
+    // Function to play flip sound
+    function playFlipSound() {
+        flipAudio.currentTime = 0; // Reset audio to start
+        flipAudio.play().catch(function(error) {
+            console.log("Flip audio play failed:", error);
+        });
+    }
+
+    grid.addEventListener('click', function (event) {
+        // Start timer on first card click
+        if (!timerStarted) {
+            startTimer();
+        }
+
+        if (!gameActive) return;
+
+        var clicked = event.target;
+
+        var card = clicked.classList.contains('card') ? clicked : clicked.parentNode;
+
+        if (!card.classList.contains('card') ||
+            card === previousTarget ||
+            card.classList.contains('selected') ||
+            card.classList.contains('match')) {
+            return;
+        }
+
+        if (count < 2) {
+            count++;
+            
+            // Play flip sound when a card is selected
+            playFlipSound();
+            
+            if (count === 1) {
+                firstGuess = card.dataset.name;
+                card.classList.add('selected');
+                previousTarget = card;
+            } else {
+                secondGuess = card.dataset.name;
+                card.classList.add('selected');
+                if (firstGuess === secondGuess) {
+                    setTimeout(function () {
+                        match();
+                        resetGuesses();
+                    }, 400);
                 } else {
-                    secondGuess = card.dataset.name;
-                    card.classList.add('selected');
-                    if (firstGuess === secondGuess) {
-                        setTimeout(function () {
-                            match();
-                            resetGuesses();
-                        }, 400);
-                    } else {
-                        setTimeout(resetGuesses, delay);
-                    }
+                    setTimeout(resetGuesses, delay);
                 }
             }
-        });
-    </script>
+        }
+    });
+</script>
 </body>
 
 </html>
