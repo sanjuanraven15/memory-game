@@ -56,7 +56,7 @@
         #score-timer {
             display: flex;
             justify-content: space-between;
-            max-width: 1100px;
+            max-width: 1400px;
             width: 100%;
             margin: 0 auto 30px;
             background: linear-gradient(135deg, rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.5));
@@ -82,12 +82,12 @@
         }
 
         .grid {
-            max-width: 1100px;
+            max-width: 1400px;
             width: 100%;
             margin: 0 auto;
             display: grid;
-            grid-template-columns: repeat(6, 150px);
-            gap: 10px;
+            grid-template-columns: repeat(6, 200px);
+            gap: 15px;
             background: rgba(0, 0, 0, 0.3);
             padding: 20px;
             border-radius: 20px;
@@ -101,8 +101,8 @@
             transform-style: preserve-3d;
             background-color: transparent !important;
             cursor: pointer;
-            height: 150px;
-            width: 150px;
+            height: 200px;
+            width: 200px;
         }
 
         .card:hover {
@@ -295,6 +295,19 @@
         }
 
         /* Tablet devices (iPad, landscape phones) */
+        @media (max-width: 1400px) {
+            .grid {
+                grid-template-columns: repeat(6, 160px);
+                gap: 12px;
+                padding: 15px;
+            }
+
+            .card {
+                height: 160px;
+                width: 160px;
+            }
+        }
+
         @media (max-width: 1024px) {
             .grid {
                 grid-template-columns: repeat(6, 120px);
@@ -557,7 +570,7 @@
     const bgMusic = new Audio('bg.mp3');
     bgMusic.preload = 'auto';
     bgMusic.loop = true;
-    bgMusic.volume = 0.3; // Set to 50% volume
+    bgMusic.volume = 0.3;
 
     // Confetti Setup
     const canvas = document.getElementById('confetti-canvas');
@@ -699,8 +712,7 @@
             finalScore.textContent = 'Your Score: ' + score;
         }
 
-        // Play clap audio when game ends
-        clapAudio.currentTime = 2; // Reset audio to start
+        clapAudio.currentTime = 2;
         clapAudio.volume = 1;
         clapAudio.play().catch(function(error) {
             console.log("Clap audio play failed:", error);
@@ -719,7 +731,6 @@
     const volumeSlider = document.getElementById('volume-slider');
     const startButton = document.getElementById('startButton');
 
-    // Start background music when "Got it!" button is clicked
     startButton.addEventListener('click', function() {
         bgMusic.play().catch(function(error) {
             console.log("Background music play failed:", error);
@@ -727,7 +738,6 @@
         musicControls.style.display = 'flex';
     });
 
-    // Toggle mute/unmute
     musicToggle.addEventListener('click', function() {
         if (bgMusic.muted) {
             bgMusic.muted = false;
@@ -740,7 +750,6 @@
         }
     });
 
-    // Adjust volume with slider
     volumeSlider.addEventListener('input', function() {
         bgMusic.volume = this.value / 100;
     });
@@ -778,7 +787,6 @@
         
         triggerConfetti();
 
-        // Check if all pairs are matched (12 pairs total)
         if (score === 12) {
             clearInterval(timerInterval);
             gameActive = false;
@@ -800,16 +808,14 @@
         });
     };
 
-    // Function to play flip sound
     function playFlipSound() {
-        flipAudio.currentTime = 0; // Reset audio to start
+        flipAudio.currentTime = 0;
         flipAudio.play().catch(function(error) {
             console.log("Flip audio play failed:", error);
         });
     }
 
     grid.addEventListener('click', function (event) {
-        // Start timer on first card click
         if (!timerStarted) {
             startTimer();
         }
@@ -817,7 +823,6 @@
         if (!gameActive) return;
 
         var clicked = event.target;
-
         var card = clicked.classList.contains('card') ? clicked : clicked.parentNode;
 
         if (!card.classList.contains('card') ||
@@ -830,7 +835,6 @@
         if (count < 2) {
             count++;
             
-            // Play flip sound when a card is selected
             playFlipSound();
             
             if (count === 1) {
