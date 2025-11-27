@@ -234,7 +234,6 @@
             margin: 1.75rem auto;
         }
 
-        /* Music Controls */
         #music-controls {
             position: fixed;
             top: 20px;
@@ -294,7 +293,6 @@
             border: none;
         }
 
-        /* Tablet devices (iPad, landscape phones) */
         @media (max-width: 1400px) {
             .grid {
                 grid-template-columns: repeat(6, 160px);
@@ -325,7 +323,6 @@
             }
         }
 
-        /* Mobile landscape and small tablets */
         @media (max-width: 768px) {
             #score-timer {
                 flex-direction: column;
@@ -374,7 +371,6 @@
             }
         }
 
-        /* Mobile devices */
         @media (max-width: 640px) {
             main {
                 padding: 20px 10px;
@@ -401,7 +397,6 @@
             }
         }
 
-        /* Very small mobile devices */
         @media (max-width: 480px) {
             .header-content img {
                 max-width: 200px;
@@ -475,7 +470,6 @@
 <body>
     <canvas id="confetti-canvas"></canvas>
 
-    <!-- Music Controls -->
     <div id="music-controls" style="display: none;">
         <button id="music-toggle">🔊</button>
         <input type="range" id="volume-slider" min="0" max="100" value="50">
@@ -497,7 +491,7 @@
             <div class="game-over-content">
                 <h2 id="gameOverTitle">⏰ Time's Up!</h2>
                 <p id="finalScore">Your Score: 0</p>
-                <button class="btn btn-primary btn-lg" onclick="location.reload()">Play Again</button>
+                <button class="btn btn-primary btn-lg" id="playAgainButton">Play Again</button>
             </div>
         </div>
 
@@ -557,22 +551,18 @@
     <script>
     'use strict';
 
-    // Audio Setup
     const clapAudio = new Audio('clap.mp3');
     clapAudio.preload = 'auto';
     
-    // Flip Audio Setup
     const flipAudio = new Audio('flip.mp3');
     flipAudio.preload = 'auto';
     flipAudio.volume = 0.5;
     
-    // Background Music Setup
     const bgMusic = new Audio('bg.mp3');
     bgMusic.preload = 'auto';
     bgMusic.loop = true;
     bgMusic.volume = 0.3;
 
-    // Confetti Setup
     const canvas = document.getElementById('confetti-canvas');
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
@@ -643,7 +633,6 @@
         canvas.height = window.innerHeight;
     });
 
-    // Game Logic
     const cardsArray = [
         { 'name': '1', 'img': 'images/1.png' },
         { 'name': '2', 'img': 'images/2.png' },
@@ -659,10 +648,6 @@
         { 'name': '12', 'img': 'images/12.png' },
     ];
 
-    var gameGrid = cardsArray.concat(cardsArray).sort(function () {
-        return 0.5 - Math.random();
-    });
-
     var firstGuess = '';
     var secondGuess = '';
     var count = 0;
@@ -676,10 +661,57 @@
     var gameCompleted = false;
 
     var scoreDisplay = document.getElementById('score');
-    scoreDisplay.textContent = 'Score: ' + score;
-
     var timerDisplay = document.getElementById('timer');
-    timerDisplay.textContent = 'Time: ' + timer;
+    var game = document.getElementById('game');
+
+    function initializeGame() {
+        score = 0;
+        timer = 60;
+        timerStarted = false;
+        gameActive = false;
+        gameCompleted = false;
+        firstGuess = '';
+        secondGuess = '';
+        count = 0;
+        previousTarget = null;
+
+        scoreDisplay.textContent = 'Score: 0';
+        timerDisplay.textContent = 'Time: 60';
+
+        if (timerInterval) {
+            clearInterval(timerInterval);
+        }
+
+        game.innerHTML = '';
+        
+        var gameGrid = cardsArray.concat(cardsArray).sort(function () {
+            return 0.5 - Math.random();
+        });
+
+        var grid = document.createElement('section');
+        grid.setAttribute('class', 'grid');
+        game.appendChild(grid);
+
+        gameGrid.forEach(function (item) {
+            var name = item.name, img = item.img;
+            var card = document.createElement('div');
+            card.classList.add('card');
+            card.dataset.name = name;
+
+            var front = document.createElement('div');
+            front.classList.add('front');
+
+            var back = document.createElement('div');
+            back.classList.add('back');
+            back.style.backgroundImage = 'url(' + img + ')';
+
+            grid.appendChild(card);
+            card.appendChild(front);
+            card.appendChild(back);
+        });
+
+        grid.addEventListener('click', handleCardClick);
+    }
 
     function startTimer() {
         if (timerStarted) return;
@@ -703,11 +735,9 @@
         const finalScore = document.getElementById('finalScore');
 
         if (completed) {
-            gameOverTitle.innerHTML = '🎉 Congratulations!';
             gameOverTitle.textContent = '🎉 Congratulations!';
             finalScore.textContent = 'You completed the game with ' + score + ' matches within the time!';
         } else {
-            gameOverTitle.innerHTML = '⏰ Time\'s Up!';
             gameOverTitle.textContent = '⏰ Time\'s Up!';
             finalScore.textContent = 'Your Score: ' + score;
         }
@@ -725,17 +755,22 @@
         $('#exampleModalCenter').modal('show');
     });
 
-    // Music Controls
     const musicControls = document.getElementById('music-controls');
     const musicToggle = document.getElementById('music-toggle');
     const volumeSlider = document.getElementById('volume-slider');
     const startButton = document.getElementById('startButton');
+    const playAgainButton = document.getElementById('playAgainButton');
 
     startButton.addEventListener('click', function() {
         bgMusic.play().catch(function(error) {
             console.log("Background music play failed:", error);
         });
         musicControls.style.display = 'flex';
+    });
+
+    playAgainButton.addEventListener('click', function() {
+        document.getElementById('gameOverOverlay').style.display = 'none';
+        initializeGame();
     });
 
     musicToggle.addEventListener('click', function() {
@@ -752,29 +787,6 @@
 
     volumeSlider.addEventListener('input', function() {
         bgMusic.volume = this.value / 100;
-    });
-
-    var game = document.getElementById('game');
-    var grid = document.createElement('section');
-    grid.setAttribute('class', 'grid');
-    game.appendChild(grid);
-
-    gameGrid.forEach(function (item) {
-        var name = item.name, img = item.img;
-        var card = document.createElement('div');
-        card.classList.add('card');
-        card.dataset.name = name;
-
-        var front = document.createElement('div');
-        front.classList.add('front');
-
-        var back = document.createElement('div');
-        back.classList.add('back');
-        back.style.backgroundImage = 'url(' + img + ')';
-
-        grid.appendChild(card);
-        card.appendChild(front);
-        card.appendChild(back);
     });
 
     var match = function match() {
@@ -815,7 +827,7 @@
         });
     }
 
-    grid.addEventListener('click', function (event) {
+    function handleCardClick(event) {
         if (!timerStarted) {
             startTimer();
         }
@@ -854,7 +866,9 @@
                 }
             }
         }
-    });
+    }
+
+    initializeGame();
 </script>
 </body>
 
