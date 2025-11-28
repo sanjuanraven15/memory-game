@@ -666,7 +666,7 @@
 
     function initializeGame() {
         score = 0;
-        timer = 60;
+        timer = 10;
         timerStarted = false;
         gameActive = false;
         gameCompleted = false;
@@ -769,7 +769,11 @@
     });
 
     playAgainButton.addEventListener('click', function() {
+        // Hide game over overlay
         document.getElementById('gameOverOverlay').style.display = 'none';
+        // Show instructions modal again
+        $('#exampleModalCenter').modal('show');
+        // Initialize game but don't start timer yet (it will start when user clicks a card)
         initializeGame();
     });
 
